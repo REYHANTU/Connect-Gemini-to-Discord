@@ -14,7 +14,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 // Fungsi untuk membagi pesan yang terlalu panjang
-function splitMessage(text, maxLength = 10000) {
+function splitMessage(text, maxLength = 2000) {
   const messages = [];
   while (text.length > 0) {
     messages.push(text.substring(0, maxLength));
@@ -34,16 +34,18 @@ client.on('messageCreate', async (message) => {
 
   try {
     await message.channel.sendTyping();
-    const prompt = message.content;
+    
+    // Tambahkan instruksi eksplisit agar AI merespons dalam Bahasa Indonesia
+    const prompt = `Balas dalam bahasa Indonesia: ${message.content}`;
 
     const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const response = result.response;
 
     if (!response || !response.text) {
       throw new Error('Invalid response from Gemini API');
     }
 
-    const replyText = response.text();
+    const replyText = response.text(); // Pastikan ini dipanggil sebagai fungsi
 
     // Jika pesan terlalu panjang, pecah menjadi beberapa bagian
     const messages = splitMessage(replyText);
@@ -52,7 +54,7 @@ client.on('messageCreate', async (message) => {
     }
   } catch (error) {
     console.error(`🚨 Gemini API Error: ${error.message}`);
-    message.reply('❌ Sorry, I encountered an error while processing your request.');
+    message.reply('❌ Maaf, terjadi kesalahan saat memproses permintaan Anda.');
   }
 });
 
